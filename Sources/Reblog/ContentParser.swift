@@ -1,4 +1,8 @@
+#if os(Linux)
+import FoundationXML
+#else
 import Foundation
+#endif
 
 class ParserDelegate: NSObject, XMLParserDelegate {
 	public var elementHandler: ((HTMLComponent) -> Void)?
