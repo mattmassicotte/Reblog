@@ -52,6 +52,15 @@ class ParserDelegate: NSObject, XMLParserDelegate {
 public enum HTMLComponent: Hashable, Sendable {
 	case text(String)
 	case link(URL, String)
+	
+	public var string: String {
+		switch self {
+		case let .link(_, text):
+			text
+		case let .text(text):
+			text
+		}
+	}
 }
 
 public struct ContentParser {
@@ -75,5 +84,9 @@ public struct ContentParser {
 		}
 		
 		return components
+	}
+	
+	public func renderToString(_ components: [HTMLComponent]) -> String {
+		components.reduce("", { $0 + $1.string })
 	}
 }

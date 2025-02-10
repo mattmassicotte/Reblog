@@ -19,3 +19,16 @@ struct ContentParserTests {
 		#expect(output == expected)
 	}
 }
+
+extension ContentParserTests {
+	@Test func renderToPlainString() throws {
+		let input = """
+ <p><span class="h-card" translate="no"><a href="https://mastodon.social/@person" class="u-url mention">@<span>person</span></a></span> hello</p>
+ """
+		
+		let output = try ContentParser().parse(input)
+		let string = ContentParser().renderToString(output)
+		
+		#expect(string == "@person hello\n")
+	}
+}

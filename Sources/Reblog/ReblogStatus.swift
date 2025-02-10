@@ -22,3 +22,14 @@ public struct ReblogStatus: Decodable, Hashable, Sendable, Identifiable {
 	}
 }
  
+extension ReblogStatus {
+	public var plainStringContent: String {
+		get throws {
+			let parser = ContentParser()
+			
+			let components = try parser.parse(content)
+			
+			return parser.renderToString(components)
+		}
+	}
+}

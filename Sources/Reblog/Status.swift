@@ -25,3 +25,15 @@ public struct Status: Decodable, Hashable, Sendable, Identifiable {
 		case mediaAttachments = "media_attachments"
 	}
 }
+
+extension Status {
+	public var plainStringContent: String {
+		get throws {
+			let parser = ContentParser()
+			
+			let components = try parser.parse(content)
+			
+			return parser.renderToString(components)
+		}
+	}
+}
