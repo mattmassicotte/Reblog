@@ -11,6 +11,7 @@ public struct Status: Decodable, Hashable, Sendable, Identifiable {
 	public let favorites: Int
 	public let reblog: ReblogStatus?
 	public let mediaAttachments: [MediaAttachment]
+	public let inReplyToId: String?
 	
 	enum CodingKeys: String, CodingKey {
 		case id
@@ -23,6 +24,7 @@ public struct Status: Decodable, Hashable, Sendable, Identifiable {
 		case favorites = "favourites_count"
 		case reblog
 		case mediaAttachments = "media_attachments"
+		case inReplyToId = "in_reply_to_id"
 	}
 }
 
