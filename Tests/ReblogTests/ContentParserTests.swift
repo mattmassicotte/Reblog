@@ -13,7 +13,6 @@ struct ContentParserTests {
 		let expected: [HTMLComponent] = [
 			.link(URL(string: "https://mastodon.social/@person")!, "@person"),
 			.text(" hello"),
-			.text("\n"),
 		]
 		
 		#expect(output == expected)
@@ -39,9 +38,7 @@ struct ContentParserTests {
 		let output = try ContentParser().parse(input)
 		let expected: [HTMLComponent] = [
 			.text("one"),
-			.text("\n"),
 			.text("two"),
-			.text("\n"),
 		]
 		
 		#expect(output == expected)
@@ -55,9 +52,7 @@ struct ContentParserTests {
 		let output = try ContentParser().parse(input)
 		let expected: [HTMLComponent] = [
 			.text("hello"),
-			.text("\n"),
 			.text("goodbye"),
-			.text("\n"),
 		]
 		
 		#expect(output == expected)
@@ -65,7 +60,7 @@ struct ContentParserTests {
 }
 
 extension ContentParserTests {
-	@Test func renderToPlainString() throws {
+	@Test func renderLinkAndText() throws {
 		let input = """
 <p><span class="h-card" translate="no"><a href="https://mastodon.social/@person" class="u-url mention">@<span>person</span></a></span> hello</p>
 """
@@ -73,6 +68,17 @@ extension ContentParserTests {
 		let output = try ContentParser().parse(input)
 		let string = ContentParser().renderToString(output)
 		
-		#expect(string == "@person hello\n")
+		#expect(string == "@person hello")
+	}
+	
+	@Test func renderTwoParagraphs() throws {
+		let input = """
+<p>one</p><p>two</p>
+"""
+		
+		let output = try ContentParser().parse(input)
+		let string = ContentParser().renderToString(output)
+		
+		#expect(string == "one\n\ntwo")
 	}
 }

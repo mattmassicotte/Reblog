@@ -30,12 +30,7 @@ class ParserDelegate: NSObject, XMLParserDelegate {
 			elementHandler?(.link(url, text))
 		case let (.text(string), "p"), let (.text(string), "br"):
 			elementHandler?(.text(string))
-			elementHandler?(.text("\n"))
 			self.activeComponent = nil
-		case (nil, "p"):
-			elementHandler?(.text("\n"))
-		case (nil, "br"):
-			elementHandler?(.text("\n"))
 		default:
 			break
 		}
@@ -127,6 +122,25 @@ public struct ContentParser {
 	}
 	
 	public func renderToString(_ components: [HTMLComponent]) -> String {
-		components.reduce("", { $0 + $1.string })
+		var output = ""
+		
+		var needsSeperator = false
+		
+		for component in components {
+			switch component {
+			case let .text(value):
+				if needsSeperator {
+					output += "\n\n"
+				}
+				
+				output += value
+				
+				needsSeperator = true
+			case let .link(_, value):
+				output += value
+			}
+		}
+		
+		return output
 	}
 }
