@@ -74,6 +74,9 @@ public struct ContentParser {
 	}
 	
 	private func unescape(_ string: String) throws -> String {
+#if os(Linux)
+		return string
+#else
 		let transform = "Any-Hex/Java"
 		let convertedString = string.mutableCopy() as! NSMutableString
 		
@@ -82,6 +85,7 @@ public struct ContentParser {
 		}
 		
 		return convertedString as String
+#endif
 	}
 	
 	public func parse(_ string: String) throws -> [HTMLComponent] {
