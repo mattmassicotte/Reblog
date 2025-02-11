@@ -3,19 +3,60 @@ import Foundation
 import FoundationXML
 #endif
 
+public typealias HTMLContent = String
+
+public enum HTMLComponent: Hashable, Sendable {
+	case text(String)
+	case seperator
+	case link(URL, String)
+	
+	public var string: String {
+		switch self {
+		case let .link(_, text):
+			text
+		case .seperator:
+			"\n\n"
+		case let .text(text):
+			text
+		}
+	}
+}
+
 class ParserDelegate: NSObject, XMLParserDelegate {
 	public var elementHandler: ((HTMLComponent) -> Void)?
 	private var activeComponent: HTMLComponent? = nil
 	
+	@discardableResult
+	func commitActive() -> Bool {
+		guard let activeComponent else { return false }
+		
+		elementHandler?(activeComponent)
+		
+		self.activeComponent = nil
+		
+		return true
+	}
+	
 	func parser(_ parser: XMLParser, didStartElement elementName: String, namespaceURI: String?, qualifiedName qName: String?, attributes attributeDict: [String : String] = [:]) {
-		switch (activeComponent, elementName) {
-		case (nil, "a"):
+		switch elementName {
+		case "p":
+			// insert a seperator only if there's an already-active element
+			if commitActive() {
+				elementHandler?(.seperator)
+			}
+		case "br":
+			commitActive()
+			
+			elementHandler?(.seperator)
+		case "a":
+			commitActive()
+			
 			let url = attributeDict["href"].flatMap { URL(string: $0) }
 			guard let url else {
 				self.activeComponent = .text("")
 				return
 			}
-			
+						
 			self.activeComponent = .link(url, "")
 		default:
 			break
@@ -23,14 +64,10 @@ class ParserDelegate: NSObject, XMLParserDelegate {
 	}
 	
 	func parser(_ parser: XMLParser, didEndElement elementName: String, namespaceURI: String?, qualifiedName qName: String?) {
-		switch (activeComponent, elementName) {
-		case let (.link(url, text), "a"):
-			self.activeComponent = nil
-			
-			elementHandler?(.link(url, text))
-		case let (.text(string), "p"), let (.text(string), "br"):
-			elementHandler?(.text(string))
-			self.activeComponent = nil
+		switch elementName {
+		case "a":
+			// this needs to close and commit the current link
+			commitActive()
 		default:
 			break
 		}
@@ -40,25 +77,16 @@ class ParserDelegate: NSObject, XMLParserDelegate {
 		switch activeComponent {
 		case let .link(url, text):
 			self.activeComponent = .link(url, text + string)
+		case let .text(value):
+			self.activeComponent = .text(value + string)
 		default:
-			elementHandler?(.text(string))
+			// begin buffering here
+			self.activeComponent = .text(string)
 		}
 	}
-}
-
-public typealias HTMLContent = String
-
-public enum HTMLComponent: Hashable, Sendable {
-	case text(String)
-	case link(URL, String)
 	
-	public var string: String {
-		switch self {
-		case let .link(_, text):
-			text
-		case let .text(text):
-			text
-		}
+	func parserDidEndDocument(_ parser: XMLParser) {
+		commitActive()
 	}
 }
 
@@ -124,21 +152,8 @@ public struct ContentParser {
 	public func renderToString(_ components: [HTMLComponent]) -> String {
 		var output = ""
 		
-		var needsSeperator = false
-		
 		for component in components {
-			switch component {
-			case let .text(value):
-				if needsSeperator {
-					output += "\n\n"
-				}
-				
-				output += value
-				
-				needsSeperator = true
-			case let .link(_, value):
-				output += value
-			}
+			output += component.string
 		}
 		
 		return output

@@ -17,6 +17,19 @@ struct ContentParserTests {
 		
 		#expect(output == expected)
 	}
+	
+	@Test func spanWithinLink() throws {
+		let input = """
+<a href="https://example.com"><span>hello</span></a>
+"""
+		
+		let output = try ContentParser().parse(input)
+		let expected: [HTMLComponent] = [
+			.link(URL(string: "https://example.com")!, "hello"),
+		]
+		
+		#expect(output == expected)
+	}
 
 	@Test func escapedAngleBrackets() throws {
 		let input = """
@@ -34,10 +47,11 @@ struct ContentParserTests {
 		let input = """
 <p>one</p><p>two</p>
 """
-		
+
 		let output = try ContentParser().parse(input)
 		let expected: [HTMLComponent] = [
 			.text("one"),
+			.seperator,
 			.text("two"),
 		]
 		
@@ -46,13 +60,55 @@ struct ContentParserTests {
 	
 	@Test func handleUnterminatedBR() throws {
 		let input = """
-<p>hello<br>goodbye</p>
+<p>one<br>two</p>
 """
 		
 		let output = try ContentParser().parse(input)
 		let expected: [HTMLComponent] = [
-			.text("hello"),
-			.text("goodbye"),
+			.text("one"),
+			.seperator,
+			.text("two"),
+		]
+		
+		#expect(output == expected)
+	}
+	
+	@Test func consecutiveTextElements() throws {
+		let input = """
+<p>Y’ou’re</p>
+"""
+		
+		let output = try ContentParser().parse(input)
+		let expected: [HTMLComponent] = [
+			.text("Y’ou’re"),
+		]
+		
+		#expect(output == expected)
+	}
+	
+	@Test func spansWithinLinkText() throws {
+		let input = """
+<p>text <a href="https://example.com">link</a></p>
+"""
+		
+		let output = try ContentParser().parse(input)
+		let expected: [HTMLComponent] = [
+			.text("text "),
+			.link(URL(string: "https://example.com")!, "link")
+		]
+		
+		#expect(output == expected)
+	}
+	
+	@Test
+	func hashtag() throws {
+		let input = """
+<a href="https://iosdev.space/tags/HourOfCode" class="mention hashtag" rel="nofollow noopener" target="_blank">#<span>HourOfCode</span></a>
+"""
+		
+		let output = try ContentParser().parse(input)
+		let expected: [HTMLComponent] = [
+			.link(URL(string: "https://iosdev.space/tags/HourOfCode")!, "#HourOfCode")
 		]
 		
 		#expect(output == expected)
