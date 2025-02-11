@@ -49,6 +49,8 @@ class ParserDelegate: NSObject, XMLParserDelegate {
 	}
 }
 
+public typealias HTMLContent = String
+
 public enum HTMLComponent: Hashable, Sendable {
 	case text(String)
 	case link(URL, String)
@@ -63,13 +65,31 @@ public enum HTMLComponent: Hashable, Sendable {
 	}
 }
 
+enum ContentParserError: Error {
+	case transformFailed
+}
+
 public struct ContentParser {
 	public init() {
 	}
 	
+	private func unescape(_ string: String) throws -> String {
+		let transform = "Any-Hex/Java"
+		let convertedString = string.mutableCopy() as! NSMutableString
+		
+		guard CFStringTransform(convertedString, nil, transform as NSString, true) else {
+			throw ContentParserError.transformFailed
+		}
+		
+		return convertedString as String
+	}
+	
 	public func parse(_ string: String) throws -> [HTMLComponent] {
+		let convertedString = try unescape(string)
+		let input = "<status>" + convertedString + "</status>"
+		
 		let delegate = ParserDelegate()
-		let parser = XMLParser(data: Data(string.utf8))
+		let parser = XMLParser(data: Data((input as String).utf8))
 		
 		parser.delegate = delegate
 		
