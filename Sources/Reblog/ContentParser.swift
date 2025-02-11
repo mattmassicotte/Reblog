@@ -28,11 +28,13 @@ class ParserDelegate: NSObject, XMLParserDelegate {
 			self.activeComponent = nil
 			
 			elementHandler?(.link(url, text))
-		case let (.text(string), "p"):
+		case let (.text(string), "p"), let (.text(string), "br"):
 			elementHandler?(.text(string))
 			elementHandler?(.text("\n"))
 			self.activeComponent = nil
 		case (nil, "p"):
+			elementHandler?(.text("\n"))
+		case (nil, "br"):
 			elementHandler?(.text("\n"))
 		default:
 			break
@@ -75,7 +77,7 @@ public struct ContentParser {
 	
 	private func unescape(_ string: String) throws -> String {
 #if os(Linux)
-		return string
+		return fallbackUnescape(string)
 #else
 		let transform = "Any-Hex/Java"
 		let convertedString = string.mutableCopy() as! NSMutableString
@@ -88,12 +90,26 @@ public struct ContentParser {
 #endif
 	}
 	
+	private func fallbackUnescape(_ string: String) -> String {
+		string
+			.replacingOccurrences(of: "\\u003c", with: "<")
+			.replacingOccurrences(of: "\\u003e", with: ">")
+	}
+	
+	private func convertToXML(_ string: String) -> String {
+		// this is just straight garbage
+		let newString = string
+			.replacingOccurrences(of: "<br>", with: "<br />")
+		
+		return "<status>" + newString + "</status>"
+	}
+	
 	public func parse(_ string: String) throws -> [HTMLComponent] {
-		let convertedString = try unescape(string)
-		let input = "<status>" + convertedString + "</status>"
+		let unscapedString = try unescape(string)
+		let xmlString = convertToXML(unscapedString)
 		
 		let delegate = ParserDelegate()
-		let parser = XMLParser(data: Data((input as String).utf8))
+		let parser = XMLParser(data: Data(xmlString.utf8))
 		
 		parser.delegate = delegate
 		

@@ -18,10 +18,10 @@ struct ContentParserTests {
 		
 		#expect(output == expected)
 	}
-	
-	@Test func escapedSignificantCharacters() throws {
+
+	@Test func escapedAngleBrackets() throws {
 		let input = """
-\\u003ca href="https://mastodon.social/@person" class="u-url mention">@person\\u003c/a>
+\\u003ca href="https://mastodon.social/@person" class="u-url mention"\\u003e@person\\u003c/a\\u003e
 """
 		let output = try ContentParser().parse(input)
 		let expected: [HTMLComponent] = [
@@ -31,7 +31,7 @@ struct ContentParserTests {
 		#expect(output == expected)
 	}
 	
-	@Test func twoConsectivePs() throws {
+	@Test func twoConsectiveTopLevelElements() throws {
 		let input = """
 <p>one</p><p>two</p>
 """
@@ -45,7 +45,22 @@ struct ContentParserTests {
 		]
 		
 		#expect(output == expected)
-
+	}
+	
+	@Test func handleUnterminatedBR() throws {
+		let input = """
+<p>hello<br>goodbye</p>
+"""
+		
+		let output = try ContentParser().parse(input)
+		let expected: [HTMLComponent] = [
+			.text("hello"),
+			.text("\n"),
+			.text("goodbye"),
+			.text("\n"),
+		]
+		
+		#expect(output == expected)
 	}
 }
 
