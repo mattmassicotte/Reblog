@@ -20,6 +20,17 @@ dependencies: [
 ]
 ```
 
+## Usage
+
+```swift
+import Reblog
+
+// data from call to "/api/v1/timelines/home"
+let data = "..."
+
+let statuses = JSONDecoder().decode([Status].self, from: data)
+```
+
 ## Contributing and Collaboration
 
 I would love to hear from you! Issues or pull requests work great. Both a [Matrix space][matrix] and [Discord][discord] are available for live help, but I have a strong bias towards answering in the form of documentation. You can also find me on [the web](https://www.massicotte.org).
