@@ -101,22 +101,32 @@ public struct ContentParser {
 	private func unescape(_ string: String) throws -> String {
 #if os(Linux)
 		return fallbackUnescape(string)
+		
 #else
-		let transform = "Any-Hex/Java"
+		let transform = "Any-Hex" as NSString
 		let convertedString = string.mutableCopy() as! NSMutableString
 		
-		guard CFStringTransform(convertedString, nil, transform as NSString, true) else {
+		guard CFStringTransform(convertedString, nil, transform, true) else {
 			throw ContentParserError.transformFailed
 		}
 		
-		return convertedString as String
+		let pass1 = convertedString as String
+		
+		return unescapeHTMLEntities(pass1)
 #endif
 	}
 	
 	private func fallbackUnescape(_ string: String) -> String {
-		string
+		let pass1 = string
 			.replacingOccurrences(of: "\\u003c", with: "<")
 			.replacingOccurrences(of: "\\u003e", with: ">")
+		
+		return unescapeHTMLEntities(pass1)
+	}
+	
+	private func unescapeHTMLEntities(_ string: String) -> String {
+		string
+			.replacingOccurrences(of: "&nbsp;", with: " ")
 	}
 	
 	private func convertToXML(_ string: String) -> String {
@@ -128,8 +138,8 @@ public struct ContentParser {
 	}
 	
 	public func parse(_ string: String) throws -> [HTMLComponent] {
-		let unscapedString = try unescape(string)
-		let xmlString = convertToXML(unscapedString)
+		let unescapedString = try unescape(string)
+		let xmlString = convertToXML(unescapedString)
 		
 		let delegate = ParserDelegate()
 		let parser = XMLParser(data: Data(xmlString.utf8))

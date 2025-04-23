@@ -113,6 +113,19 @@ struct ContentParserTests {
 		
 		#expect(output == expected)
 	}
+	
+	@Test func testAmpersandEscapeSequence() throws {
+		let input = """
+<p>before&nbsp;after</p>
+"""
+		
+		let output = try ContentParser().parse(input)
+		let expected: [HTMLComponent] = [
+			.text("before after")
+		]
+		
+		#expect(output == expected)		
+	}
 }
 
 extension ContentParserTests {
