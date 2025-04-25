@@ -20,7 +20,7 @@ public struct MediaAttachment: Decodable, Hashable, Sendable, Identifiable {
 	public let remoteURLString: String?
 	public let meta: Meta
 	public let description: String?
-	public let blurhash: String
+	public let blurhash: String?
 	
 	enum CodingKeys: String, CodingKey {
 		case id
